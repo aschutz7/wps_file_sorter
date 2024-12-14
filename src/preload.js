@@ -1,2 +1,17 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electron', {
+	getConfig: () => ipcRenderer.invoke('get-config'),
+	getErrors: () => ipcRenderer.invoke('get-errors'),
+	sortFiles: (sourceFolder, outputFolder) =>
+		ipcRenderer.invoke('sort-files', sourceFolder, outputFolder),
+
+	// Event listener for progress
+	on: (channel, callback) => {
+		ipcRenderer.on(channel, (event, ...args) => callback(...args));
+	},
+
+	off: (channel, callback) => {
+		ipcRenderer.removeListener(channel, callback);
+	},
+});
