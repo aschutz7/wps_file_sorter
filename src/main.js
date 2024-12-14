@@ -3,9 +3,8 @@ import path from 'node:path';
 import fs from 'fs';
 import os from 'os';
 import started from 'electron-squirrel-startup';
-import { autoUpdater } from 'electron-updater';
+import { updateElectronApp } from 'update-electron-app';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
 	app.quit();
 }
@@ -26,36 +25,32 @@ async function sortFilesIntoFolders(
 	files,
 	sourceFolder,
 	outputFolder = sourceFolder,
-	setProgress
+	setProgress,
+	mainWindow
 ) {
 	for (let i = 0; i < files.length; i++) {
 		const file = files[i];
 		const filePath = path.join(sourceFolder, file.fileName);
 
-		// Skip directories
 		const stats = await fs.promises.stat(filePath);
 		if (!stats.isFile()) {
 			continue;
 		}
 
-		// Extract identifier
 		const identifier = extractIdentifier(file.fileName);
 
-		// Skip files without a valid identifier
 		if (!identifier) {
 			continue;
 		}
 
-		// Create folder and move file
 		const folderPath = path.join(outputFolder, identifier);
 		await createFolderIfNotExists(folderPath);
 
 		const destPath = path.join(folderPath, file.fileName);
 
 		try {
-			await fs.promises.rename(filePath, destPath); // Move file to destination folder
-			setProgress(((i + 1) / files.length) * 100); // Update progress
-			// Send progress to the renderer process
+			await fs.promises.rename(filePath, destPath);
+			setProgress(((i + 1) / files.length) * 100);
 			mainWindow.webContents.send(
 				'progress',
 				((i + 1) / files.length) * 100
@@ -67,7 +62,6 @@ async function sortFilesIntoFolders(
 		}
 	}
 }
-
 async function logErrorToFile(error) {
 	const configDirectory = path.join(
 		os.homedir(),
@@ -78,7 +72,6 @@ async function logErrorToFile(error) {
 	);
 	const errorsPath = path.join(configDirectory, 'errors.json');
 
-	// Ensure the errors.json file exists
 	if (!fs.existsSync(errorsPath)) {
 		const defaultErrors = [
 			{
@@ -98,10 +91,8 @@ async function logErrorToFile(error) {
 		);
 	}
 
-	// Read the current errors from errors.json
 	const errors = JSON.parse(fs.readFileSync(errorsPath, 'utf-8'));
 
-	// Log the new error
 	const errorLog = {
 		date: new Date().toISOString(),
 		error: {
@@ -112,10 +103,8 @@ async function logErrorToFile(error) {
 		errorId: generateUniqueErrorId(),
 	};
 
-	// Add new error to the array
 	errors.push(errorLog);
 
-	// Write updated errors array back to the file
 	fs.writeFileSync(errorsPath, JSON.stringify(errors, null, 2), 'utf-8');
 }
 
@@ -149,36 +138,19 @@ const createWindow = () => {
 
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-	autoUpdater.setFeedURL({
-		provider: 'github',
-		repo: 'your-repo',
-		owner: 'your-username',
-		token: 'your-personal-access-token', 
+	ipcMain.handle('check-for-updates', () => {
+		updateElectronApp();
 	});
 
-	autoUpdater.checkForUpdatesAndNotify();
-
-	autoUpdater.on('update-available', () => {
-		new Notification({
-			title: 'Update Available',
-			body: 'A new version is available, downloading now.',
-		}).show();
-	});
-
-	autoUpdater.on('update-downloaded', () => {
-		new Notification({
-			title: 'Update Ready',
-			body: 'Update downloaded, will be installed on app restart.',
-		}).show();
-		app.quit();
-	});
-
-	autoUpdater.on('error', (err) => {
-		console.error('Error during update:', err);
-		new Notification({
-			title: 'Update Error',
-			body: 'Failed to check for updates.',
-		}).show();
+	updateElectronApp({
+		updateInterval: '1 hour',
+		notifyUser: true,
+		updateSource: {
+			type: 'github',
+			repo: 'aschutz7/wps_file_sorter',
+			owner: 'aschutz7',
+			name: 'wps_file_sorter',
+		},
 	});
 
 	ipcMain.handle('get-config', () => {
@@ -257,10 +229,10 @@ const createWindow = () => {
 				sortedFiles,
 				sourceFolder,
 				outputFolder || sourceFolder,
-				(progress) => mainWindow.webContents.send('progress', progress)
+				(progress) => mainWindow.webContents.send('progress', progress),
+				mainWindow
 			);
 
-			// Increment filesMoved count in config
 			const configPath = path.join(
 				os.homedir(),
 				'AppData',

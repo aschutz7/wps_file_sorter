@@ -53,7 +53,7 @@ const Sidebar = ({ width = 175, isCollapsible = true, className = '' }) => {
 						onClick={toggleSidebar}
 						className='absolute top-2 right-2 z-10 text-white mb-1'
 						style={{
-							marginRight: isOpen ? '10px' : '0px', // Maintain space when collapsed
+							marginRight: isOpen ? '10px' : '0px',
 						}}
 					>
 						{isOpen ? <X size={24} /> : <Menu size={24} />}

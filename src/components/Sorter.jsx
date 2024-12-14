@@ -8,20 +8,19 @@ export default function Sorter() {
 	const [progress, setProgress] = useState(0);
 
 	useEffect(() => {
-		// Listen to progress updates
-		const handleProgress = (newProgress) => {
-			setProgress(newProgress);
-		};
-
-		// Attach the listener when the component is mounted
-		window.electron.on('progress', handleProgress);
-
-		// Cleanup the listener when the component is unmounted
-		return () => {
-			// You can remove the listener if needed
-			window.electron.off('progress', handleProgress);
-		};
-	}, []);
+		if (sorting) {
+			const interval = setInterval(() => {
+				setProgress((prev) => {
+					if (prev < 100) {
+						return prev + 1;
+					} else {
+						clearInterval(interval);
+						return 100;
+					}
+				});
+			}, 100);
+		}
+	}, [sorting]);
 
 	const handleSort = async () => {
 		if (sorting) {
@@ -34,9 +33,7 @@ export default function Sorter() {
 		setProgress(0);
 
 		try {
-			// Invoke the sorting process from the main process
-			const result = await window.electron.invoke(
-				'sort-files',
+			const result = await window.electron.sortFiles(
 				selectedFolder,
 				outputFolder
 			);
@@ -49,6 +46,7 @@ export default function Sorter() {
 		} catch (error) {
 			console.error('Error sorting files:', error);
 			alert('An error occurred while sorting the files.');
+			setSorting(false);
 		}
 	};
 
@@ -93,15 +91,12 @@ export default function Sorter() {
 						Sort Files
 					</button>
 
-					{/* Progress bar */}
 					{sorting && (
 						<div className='mt-4'>
-							<p className='text-lg mb-2'>
-								Sorting Progress: {progress}%
-							</p>
+							<p className='text-lg mb-2'>Sorting Files...</p>
 							<div className='w-full bg-gray-700 rounded'>
 								<div
-									className='bg-green-500 h-2 rounded'
+									className='bg-green-500 h-2 rounded animated-progress-bar'
 									style={{ width: `${progress}%` }}
 								></div>
 							</div>
