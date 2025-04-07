@@ -77,15 +77,18 @@ function generateUniqueErrorId() {
 function extractIdentifier(fileName) {
 	const cleanedFileName = fileName.replace(/[^\w\s-]/g, '').trim();
 	const normalizedFileName = cleanedFileName.replace(/-0-/g, '-');
-	const regex = /(\d{2}-\d{3})-(\d{4})-(\d{2}-\d{3})/;
+
+	const regex = /^(\d{2}-\d{3}-\w{4}-\d{2}-\d{3})/;
+
 	const match = normalizedFileName.match(regex);
 
 	if (match) {
-		return `${match[1]}0${match[2]}${match[3]}`.replace(/-/g, '');
+		return match[1].replace(/-/g, '').toUpperCase();
 	}
 
 	return '';
 }
+
 
 async function sortFilesIntoFolders(
 	files,
@@ -151,12 +154,11 @@ ipcMain.handle('get-config', () => {
 	}
 
 	const configPath = path.join(configDirectory, 'config.json');
-	const errorsPath = path.join(configDirectory, 'errors.json');
 
 	if (!fs.existsSync(configPath)) {
 		const defaultConfig = {
 			firstLaunch: false,
-			version: '1.0.0a',
+			version: app.getVersion(),
 			lastOpened: new Date().toISOString(),
 			filesMoved: 0,
 		};
@@ -170,6 +172,10 @@ ipcMain.handle('get-config', () => {
 	}
 
 	const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+
+	config.version = app.getVersion();
+	fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8');
+
 	return config;
 });
 
@@ -261,6 +267,7 @@ app.whenReady().then(() => {
 	updateElectronApp({
 		updateInterval: '1 hour',
 		notifyUser: true,
+		logger: require('electron-log'),
 		updateSource: {
 			type: UpdateSourceType.ElectronPublicUpdateService,
 			repo: 'aschutz7/wps_file_sorter',

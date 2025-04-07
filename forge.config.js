@@ -14,7 +14,7 @@ module.exports = {
 					owner: 'aschutz7',
 					name: 'wps_file_sorter',
 				},
-				prerelease: true,
+				prerelease: false,
 				draft: false,
 			},
 		},

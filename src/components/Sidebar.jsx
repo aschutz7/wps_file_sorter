@@ -6,11 +6,17 @@ const openBugReport = () => {
 	window.electron.openExternal('https://forms.gle/iCbg2LCn6wWU9fsS8');
 };
 
-const Sidebar = ({ width = 175, isCollapsible = true, className = '' }) => {
+const Sidebar = ({
+	width = 175,
+	isCollapsible = true,
+	className = '',
+	version = '1.0.0',
+}) => {
 	const [isOpen, setIsOpen] = useState(true);
 	const [sidebarWidth, setSidebarWidth] = useState(width);
 	const [isResizing, setIsResizing] = useState(false);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+
 	const toggleSidebar = () => {
 		if (isCollapsible) {
 			setIsOpen(!isOpen);
@@ -144,6 +150,10 @@ const Sidebar = ({ width = 175, isCollapsible = true, className = '' }) => {
 						onMouseDown={startResize}
 					/>
 				)}
+
+				<div className='mt-auto text-center text-gray-400 text-sm'>
+					{isOpen && <span>Version: {version}</span>}
+				</div>
 			</div>
 
 			{isModalOpen && <Modal />}

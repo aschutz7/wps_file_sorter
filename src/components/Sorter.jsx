@@ -6,6 +6,13 @@ export default function Sorter() {
 	const [outputFolder, setOutputFolder] = useState('');
 	const [sorting, setSorting] = useState(false);
 	const [progress, setProgress] = useState(0);
+	const [version, setVersion] = useState('');
+
+	useEffect(() => {
+		window.electron.getConfig().then((config) => {
+			setVersion(config.version);
+		});
+	}, []);
 
 	useEffect(() => {
 		if (sorting) {
@@ -52,7 +59,7 @@ export default function Sorter() {
 
 	return (
 		<div className='bg-gray-900 text-white min-h-screen flex'>
-			<Sidebar isCollapsible className='shrink-0' />
+			<Sidebar isCollapsible className='shrink-0' version={version} />
 			<div className='flex-grow p-8'>
 				<header className='text-center mb-8'>
 					<h1 className='text-4xl font-bold'>File Sorter</h1>

@@ -93,3 +93,5 @@ publish.cmd
 
 # Electron-Forge
 out/
+
+.early.coverage

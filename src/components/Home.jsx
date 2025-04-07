@@ -4,8 +4,13 @@ import Sidebar from './Sidebar.jsx';
 export default function Home() {
 	const [updateAvailable, setUpdateAvailable] = useState(false);
 	const [downloading, setDownloading] = useState(false);
+	const [version, setVersion] = useState('');
 
 	useEffect(() => {
+		window.electron.getConfig().then((config) => {
+			setVersion(config.version);
+		});
+
 		const handleUpdateAvailable = () => {
 			setUpdateAvailable(true);
 			new Notification('Update Available', {
@@ -37,7 +42,7 @@ export default function Home() {
 
 	return (
 		<div className='bg-gray-900 text-white min-h-screen flex'>
-			<Sidebar isCollapsible className='shrink-0' />
+			<Sidebar isCollapsible className='shrink-0' version={version} />
 			<div className='flex-grow flex flex-col items-center justify-center'>
 				<header className='text-center'>
 					<h1 className='text-5xl font-bold'>
@@ -45,9 +50,6 @@ export default function Home() {
 						<br />
 						File Sorter
 					</h1>
-					{/* <p className='text-lg'>
-						Simply and easy file sorting
-					</p> */}
 				</header>
 
 				<div className='space-y-4 space-x-3'>
