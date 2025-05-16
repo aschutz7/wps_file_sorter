@@ -76,19 +76,15 @@ function generateUniqueErrorId() {
 
 function extractIdentifier(fileName) {
 	const cleanedFileName = fileName.replace(/[^\w\s-]/g, '').trim();
-	const normalizedFileName = cleanedFileName.replace(/-0-/g, '-');
-
-	const regex = /^(\d{2}-\d{3}-\w{4}-\d{2}-\d{3})/;
-
-	const match = normalizedFileName.match(regex);
+	const regex = /(\d{2})-(\d{3})-(\d{4})-(\d{2})-(\d{3})/;
+	const match = cleanedFileName.match(regex);
 
 	if (match) {
-		return match[1].replace(/-/g, '').toUpperCase();
+		return `${match[1]}${match[2]}0${match[3]}${match[4]}${match[5]}`;
 	}
 
 	return '';
 }
-
 
 async function sortFilesIntoFolders(
 	files,
@@ -133,7 +129,21 @@ async function sortFilesIntoFolders(
 }
 
 ipcMain.handle('check-for-updates', () => {
-	updateElectronApp();
+	const updater = updateElectronApp({
+		updateInterval: '1 hour',
+		notifyUser: true,
+		// updateSource: {
+		// 	type: 'github',
+		// 	repo: 'aschutz7/wps_file_sorter',
+		// 	owner: 'aschutz7',
+		// 	name: 'wps_file_sorter',
+		// },
+		updateSource: {
+			type: UpdateSourceType.ElectronPublicUpdateService,
+			repo: 'aschutz7/wps_file_sorter',
+		},
+		logger: require('electron-log'),
+	});
 });
 
 ipcMain.on('open-external', (event, url) => {
@@ -260,20 +270,26 @@ const createWindow = () => {
 		icon: __dirname + '/icon.ico',
 	});
 
+	const updater = updateElectronApp({
+		updateInterval: '1 hour',
+		notifyUser: true,
+		// updateSource: {
+		// 	type: 'github',
+		// 	repo: 'aschutz7/wps_file_sorter',
+		// 	owner: 'aschutz7',
+		// 	name: 'wps_file_sorter',
+		// },
+		// updateSource: {
+		// 	type: UpdateSourceType.ElectronPublicUpdateService,
+		// 	repo: 'aschutz7/wps_file_sorter',
+		// },
+		logger: require('electron-log'),
+	});
+
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 };
 
 app.whenReady().then(() => {
-	updateElectronApp({
-		updateInterval: '1 hour',
-		notifyUser: true,
-		logger: require('electron-log'),
-		updateSource: {
-			type: UpdateSourceType.ElectronPublicUpdateService,
-			repo: 'aschutz7/wps_file_sorter',
-			host: 'https://update.electronjs.org',
-		},
-	});
 	createWindow();
 
 	app.on('activate', () => {

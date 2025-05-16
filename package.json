@@ -1,8 +1,12 @@
 {
 	"name": "wps_file_sorter",
-	"version": "1.0.4",
+	"version": "1.1.1",
 	"description": "Program which sorts files according to their names into folders.",
 	"main": ".webpack/main",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/aschutz7/wps_file_sorter.git"
+	},
 	"scripts": {
 		"start": "electron-forge start",
 		"package": "electron-forge package",
