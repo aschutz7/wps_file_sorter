@@ -49,7 +49,6 @@ export default function Home() {
 						WPS Engineering LLC
 						<br />
 						File Sorter
-						test home page change
 					</h1>
 				</header>
 
