@@ -1,6 +1,6 @@
 {
 	"name": "wps_file_sorter",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Program which sorts files according to their names into folders.",
 	"main": ".webpack/main",
 	"repository": {
