@@ -75,16 +75,52 @@ function generateUniqueErrorId() {
 }
 
 function extractIdentifier(fileName) {
-	const cleanedFileName = fileName.replace(/[^\w\s-]/g, '').trim();
-	const regex = /(\d{2})-(\d{3})-(\d{4})-(\d{2})-(\d{3})/;
+	const cleanedFileName = fileName
+		.replace(/[^\w\s.-]/g, '')
+		.replace('-0-', '-')
+		.trim();
+
+	const regex = /\d{2}-\d{3}-[A-Z0-9]+-\d{2}-\d{3}/i;
 	const match = cleanedFileName.match(regex);
 
-	if (match) {
-		return `${match[1]}${match[2]}0${match[3]}${match[4]}${match[5]}`;
-	}
+	if (!match) return '';
 
-	return '';
+	const parts = match[0].split('-');
+	if (parts.length !== 5) return '';
+
+	const [p1, p2, p3, p4, p5] = parts;
+
+	return `${p1}${p2}0${p3}${p4}${p5}`;
 }
+
+// const tests = [
+// 	['09-014-0-AA01-10-001 other text.pdf', '090140AA0110001'],
+// 	['09-014-0-AA01-10-001_LR.pdf', '090140AA0110001'],
+// 	['09-014-010-10-001_LR.pdf', '09014001010001'],
+// 	['09-014-B948-93-001_InvSketch_2025-05.pdf', '090140B94893001'],
+// 	['09-014-C026-87-001_LR_2025-05.pdf', '090140C02687001'],
+// 	['09-014-1234-56-789_RandomText.pdf', '090140123456789'],
+// 	['invalid-file-name.pdf', ''],
+// 	['2025-05_09-014-AA01-10-001.pdf', '090140AA0110001'],
+// 	['ExtraText_09-014-AA01-10-001_Tail.pdf', '090140AA0110001'],
+// 	['file without identifier.pdf', ''],
+// 	['21-024-0-0482-02-007_ScourSumSht_2024_10.pdf', '210240048202007'],
+// 	['21-024-0-0696-03-008_ScourSumSht_2024_06.pdf', '210240069603008'],
+// ];
+
+// let passed = 0;
+// for (const [input, expected] of tests) {
+// 	const result = extractIdentifier(input);
+// 	const ok = result === expected;
+// 	console.log(
+// 		`${
+// 			ok ? '✅ PASS' : '❌ FAIL'
+// 		} | Input: "${input}" | Expected: "${expected}" | Got: "${result}"`
+// 	);
+// 	if (ok) passed++;
+// }
+
+// console.log(`\n${passed}/${tests.length} tests passed.`);
 
 async function sortFilesIntoFolders(
 	files,
@@ -104,9 +140,13 @@ async function sortFilesIntoFolders(
 
 		const identifier = extractIdentifier(file.fileName);
 
-		if (!identifier) {
+		if (!identifier || String(identifier).length === 0) {
 			continue;
 		}
+
+		// if (!identifier || String(identifier).length !== 15) {
+		// 	continue;
+		// }
 
 		const folderPath = path.join(outputFolder, identifier);
 		await createFolderIfNotExists(folderPath);
